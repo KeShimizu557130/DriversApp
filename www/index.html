@@ -14,39 +14,99 @@
             /* Bind to ViewModel */
             ko.applyBindings(ViewModel);
         });
-
+        var current_id;
         function editRow(element) {
             var row = element.id;
             var data = ViewModel.items()[row];
-            ViewModel.inputStartTime(data.startTime);
-            ViewModel.inputLocation(data.location);
             ViewModel.inputArrivalTime(data.arrivalTime);
+            ViewModel.inputLocation(data.location);
+            ViewModel.inputdepartureTime(data.departureTime);
+            current_id = element.id;
         }
+        function updateRow() {
+            ViewModel.items.splice(current_id, 1,
+                { arrivalTime: ViewModel.inputArrivalTime(), location: ViewModel.inputLocation(), departureTime: ViewModel.inputdepartureTime() });
+            $.mobile.changePage('#main_screen');
+        }
+        function updateLocation() {
+            var rowdata = ViewModel.items()[current_id];
+            ViewModel.items.splice(current_id, 1,
+                { arrivalTime: rowdata.arrivalTime, location: ViewModel.inputLocation2(), departureTime: rowdata.departureTime });
+            $.mobile.changePage('#main_screen');
+        }
+        function record() {
+            var status = getEntriedStatus();
+//alert('status:' + status + ', current_id:' + current_id);
+            switch (status) {
+                case 0:
+                    $("#recordLocationDialog").popup("open");
+                    break;
+                case 1:
+                    //出発時刻入力
+                    var rowdata = ViewModel.items()[current_id];
+                    
+                    ViewModel.items.splice(current_id, 1,
+                        { arrivalTime: rowdata.arrivalTime, location: rowdata.location, departureTime: now() });
+                    break;
+                case 2:
+                    //到着時刻入力
+                    ViewModel.items.push({ arrivalTime: now(), location: "", departureTime: "" });
+                    break;
+            }
+        }
+        //現在の入力済み状態を取得する。
+        function getEntriedStatus() {
+            var count = ViewModel.items().length;
+            var row = count - 1;
+            while (row >= 0) {
+                current_id = row;
+                var rowdata = ViewModel.items()[row];
+                if (rowdata.departureTime != "") {
+                    //出発時刻まで入力済
+                    return 2;
+                }
+                if (rowdata.location != "") {
+                    //経由地まで入力済
+                    return 1;
+                }
+                if (rowdata.arrivalTime != "") {
+                    //到着時刻が入力済
+                    return 0;
+                }
+                row--;
+            }
+            return -1;
+        }
+        function now() {
+            var current = new Date();
+            return (current.getHours() + ':' + current.getMinutes());
+        }
+
         </script>
     </head>
     <body>
-    <div data-role="page">
+    <div data-role="page" id="main_screen">
         <div data-role="header">
             <h1>Page Title</h1>
             <a href="#" class="ui-btn-right ui-btn ui-btn-inline ui-mini ui-corner-all ui-btn-icon-right ui-icon-gear">Archive</a>
         </div>
         <div align="center">
-            <a href="#popupRegist" data-rel="popup" data-position-to="window" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-icon-star ui-btn-icon-left ui-btn-a" data-transition="pop">記録</a><br>
+            <a onClick="record();" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-icon-star ui-btn-icon-left ui-btn-a" data-transition="pop">記録</a><br>
         </div>
         <table data-role="table" id="table-column-toggle" data-mode="columntoggle" class="ui-responsive table-stroke">
             <thead>
                 <tr>
-                    <th data-priority="1">出発</th>
-                    <th data-priority="1">経路</th>
                     <th data-priority="1">到着</th>
+                    <th data-priority="1">経由地</th>
+                    <th data-priority="1">出発</th>
                     <th data-priority="1">編集</th>
                 </tr>
             </thead>
             <tbody data-bind="foreach: items">
                 <tr>
-                    <th data-bind="text: startTime"></th>
-                    <td data-bind="text: location"></td>
                     <td data-bind="text: arrivalTime"></td>
+                    <td data-bind="text: location"></td>
+                    <td data-bind="text: departureTime"></td>
                     <td onClick="editRow(this);" data-bind="attr: {id: $index}"><a href="#popupRegist" data-rel="popup" data-position-to="window" data-transition="pop">編集</a></td>
                 </tr>
             </tbody>
@@ -54,14 +114,20 @@
         <div data-role="popup" id="popupRegist" data-theme="a" class="ui-corner-all">
             <div style="padding:10px 20px;">
                 <h3>Let's Record!</h3>
-                <label for="sTime" class="ui-hidden-accessible">出発時間:</label>
-                <input type="text" name="startTime" id="sTime" value="" placeholder="出発時間" data-theme="a" data-bind="value: inputStartTime">
-                <label for="location" class="ui-hidden-accessible">経路:</label>
-                <input type="text" name="location" id="location" value="" placeholder="経路" data-theme="a" data-bind="value: inputLocation">
+                <>
                 <label for="aTime" class="ui-hidden-accessible">到着時間:</label>
                 <input type="text" name="arrivalTime" id="aTime" value="" placeholder="到着時間" data-theme="a" data-bind="value: inputArrivalTime">
-                <button type="submit" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-btn-icon-left ui-icon-check">登録</button>
+                <label for="location" class="ui-hidden-accessible">経由地:</label>
+                <input type="text" name="location" id="location" value="" placeholder="経由地" data-theme="a" data-bind="value: inputLocation">
+                <label for="sTime" class="ui-hidden-accessible">出発時間:</label>
+                <input type="text" name="departureTime" id="sTime" value="" placeholder="出発時間" data-theme="a" data-bind="value: inputDepartureTime">
+                <button type="submit" onClick="updateRow();" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-btn-icon-left ui-icon-check">登録</button>
             </div>
+        </div>
+        <div data-role="popup" id="recordLocationDialog" title="経由地登録">
+            <label for="location2" class="ui-hidden-accessible">経由地:</label>
+            <input type="text" name="location" id="location2" value="" placeholder="経由地" data-theme="a" data-bind="value: inputLocation2">
+            <button type="submit" onClick="updateLocation();" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-btn-icon-left ui-icon-check">登録</button>
         </div>
     </div>
     </body>

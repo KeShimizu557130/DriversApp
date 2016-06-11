@@ -16,6 +16,15 @@ var InputDataEntity = (function() {
         this.departureTime = ko.observable(departure);
         this.movingTime    = ko.observable(moving);
     };
+
+    var p = InputDataEntity.prototype;
+
+    /** Copy Constructor
+     */
+    p.clone = function() {
+        return new InputDataEntity(this.arrivalTime(), this.location(), this.departureTime(), this.movingTime());
+    }
+
     return InputDataEntity;
 })();
 
@@ -51,39 +60,38 @@ var ViewModel = {
     items: ko.observableArray([
         new InputDataEntity(moment("09:00", "HH:mm"), "渋谷", moment("10:05", "HH:mm"), ""),
         new InputDataEntity(moment("10:21", "HH:mm"), "横浜", moment("12:30", "HH:mm"), "0:16"),
-        new InputDataEntity(moment("13:05", "HH:mm"), "平塚", moment("14:30", "HH:mm"), "0:35"),
+        new InputDataEntity(moment("13:05", "HH:mm"), "平塚", moment("14:30", "HH:mm"), "0:35")
     ]),
 
     /** Tempolary Input Data.
      */
-    inputData: new InputDataEntity("", "", ""),
+    inputData: new InputDataEntity("", "", "", ""),
 
     /** Editing row number
      */
     current_id: 0,
 
-    // 経由地編集ダイアログで登録ボタンタップ時の処理
+    // 経由地情報変更（経由地編集ダイアログで登録ボタンクリック）
     updateRow: function() {
         var previous_rowdata   = ViewModel.items()[ViewModel.current_id - 1];
-        var previous_departure = moment(previous_rowdata.departureTime);
+        var previous_departure = previous_rowdata.departureTime();
         var arrival            = moment(ViewModel.inputData.arrivalTime(), "HH:mm");
         var departure          = moment(ViewModel.inputData.departureTime(), "HH:mm");
         ViewModel.items.splice(ViewModel.current_id, 1, new InputDataEntity(arrival,
-                                                                    ViewModel.inputData.location,
+                                                                    ViewModel.inputData.location(),
                                                                     departure,
                                                                     ViewModel.__getDifferenceMinutes(arrival, previous_departure)));
         $.mobile.changePage('#main_screen');
     },
-    // 経由地名称更新ダイアログで登録ボタンタップ時の処理
+    // 経由地名称変更（経由地名称更新ダイアログで登録ボタンクリック）
     updateLocation: function() {
         var rowdata = ViewModel.items()[ViewModel.current_id];
-        ViewModel.items.splice(ViewModel.current_id, 1, new InputDataEntity(rowdata.arrivalTime(), 
-                                                                ViewModel.inputData.location(),
-                                                                  rowdata.departureTime(),
-                                                                  rowdata.movingTime()));
+        var newinput = rowdata.clone();
+        newinput.location(ViewModel.inputData.location());
+        ViewModel.items.splice(ViewModel.current_id, 1, newinput);
         $.mobile.changePage('#main_screen');
     },
-    // メイン画面 記録ボタンタップ時の処理
+    // 到着時刻、経由地名称、出発時刻記録（メイン画面 記録ボタンクリック）
     record: function() {
         var status = ViewModel.__getEntriedStatus();
         switch (status) {
@@ -93,10 +101,9 @@ var ViewModel = {
             case EntriedColumnStatus.Location:
                 //出発時刻入力
                 var rowdata = ViewModel.items()[ViewModel.current_id];
-                ViewModel.items.splice(ViewModel.current_id, 1, new InputDataEntity(rowdata.arrivalTime(),
-                                                                          rowdata.location(),
-                                                                          moment(),
-                                                                          rowdata.movingTime()));
+                var newinput = rowdata.clone();
+                newinput.departureTime(moment());
+                ViewModel.items.splice(ViewModel.current_id, 1, newinput);
                 break;
             case EntriedColumnStatus.DepartureTime:
                 //到着時刻入力
@@ -107,21 +114,22 @@ var ViewModel = {
                 break;
         }
     },
-    // メイン画面 記録表の行タップ時の処理
+    // 経由地情報変更ダイアログ表示（メイン画面 記録表の行クリック）
     editRow: function(rowdata, event) {
-        current_id = event.target.id;
+        ViewModel.current_id = event.target.id;
         ViewModel.inputData.arrivalTime(rowdata.arrivalTime().format("HH:mm"));
         ViewModel.inputData.location(rowdata.location());
         if (rowdata.departureTime != "") {
             ViewModel.inputData.departureTime(rowdata.departureTime().format("HH:mm"));
         }
+//        ViewModel.inputData = rowdata.clone();
         $('#popupRegist').popup('open');
     },
     /** [Private]
      */
     __getDifferenceMinutes: function(arrivalTime, previousDepartureTime) {
         var min = moment(arrivalTime.diff(previousDepartureTime));
-        return min.utc().format('HH:mm');
+        return min.utc().format('H:mm');
     },
     /** [Private]
      */

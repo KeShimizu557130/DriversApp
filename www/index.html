@@ -21,7 +21,7 @@
             <a href="#" data-bind="click: record" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-icon-star ui-btn-icon-left ui-btn-a" data-transition="pop">記録</a>
         </div>
 
-        <div data-bind="foreach: items">
+        <div data-bind="foreach: LocationList">
             <div class="moveInfo" data-bind="if: $index()!=0">
                 <img src="img/car2.png" class="icon-move">移動...(<span data-bind="text: movingTime"></span>)
             </div>
@@ -32,26 +32,26 @@
                     <span data-bind="if: $index()!=0">到着:  <span data-bind="date: arrivalTime"></span><br></span>
                     出発:  <span data-bind="date: departureTime"></span>
                 </div>
-                <div class="locationInfo" data-bind="text: location">
+                <div class="locationInfo" data-bind="text: locationName">
                 </div>
             </div>
         </div>
-        <div data-role="popup" id="popupRegist" data-theme="a" class="ui-corner-all">
+        <div data-role="popup" id="updateLocationDialog" data-theme="a" class="ui-corner-all">
             <div style="padding:10px 20px;">
                 <h3>Let's Record!</h3>
                 <label for="aTime" class="ui-hidden-accessible">到着時間:</label>
-                <input type="text" name="arrivalTime" id="aTime" value="" placeholder="到着時間" data-theme="a" data-bind="value: inputData.arrivalTime">
+                <input type="text" name="arrivalTime" id="aTime" value="" placeholder="到着時間" data-theme="a" data-bind="value: LocationOnDialog.arrivalTime">
                 <label for="location" class="ui-hidden-accessible">経由地:</label>
-                <input type="text" name="location" id="location" value="" placeholder="経由地" data-theme="a" data-bind="value: inputData.location">
+                <input type="text" name="locationName" id="location" value="" placeholder="経由地" data-theme="a" data-bind="value: LocationOnDialog.locationName">
                 <label for="sTime" class="ui-hidden-accessible">出発時間:</label>
-                <input type="text" name="departureTime" id="sTime" value="" placeholder="出発時間" data-theme="a" data-bind="value: inputData.departureTime">
+                <input type="text" name="departureTime" id="sTime" value="" placeholder="出発時間" data-theme="a" data-bind="value: LocationOnDialog.departureTime">
                 <button type="submit" data-bind="click: updateRow" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-btn-icon-left ui-icon-check">登録</button>
             </div>
         </div>
-        <div data-role="popup" id="recordLocationDialog" title="経由地登録">
+        <div data-role="popup" id="recordLocationNameDialog" title="経由地登録">
             <label for="location2" class="ui-hidden-accessible">経由地:</label>
-            <input type="text" name="location" id="location2" value="" placeholder="経由地" data-theme="a" data-bind="value: inputData.location">
-            <button type="submit" data-bind="click: updateLocation" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-btn-icon-left ui-icon-check">登録</button>
+            <input type="text" name="locationName" id="location2" value="" placeholder="経由地" data-theme="a" data-bind="value: LocationOnDialog.locationName">
+            <button type="submit" data-bind="click: updateLocationName" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-btn-icon-left ui-icon-check">登録</button>
         </div>
     </div>
     </body>

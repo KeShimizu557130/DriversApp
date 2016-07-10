@@ -27,7 +27,7 @@
             </ul>
         </div>
     </div>
-    <!-- 経路表示画面 -->
+    <!-- メイン画面 -->
     <div data-role="page" id="main_screen">
         <div data-role="header" data-add-back-btn="true">
             <h1>ドライブ詳細</h1>
@@ -52,24 +52,55 @@
                 </div>
             </div>
         </div>
-        <!-- 位置情報登録 -->
+        <!-- 経由地情報更新 -->
         <div data-role="popup" id="updateLocationDialog" data-theme="a" class="ui-corner-all">
             <div style="padding:10px 20px;">
                 <h3>Let's Record!</h3>
-                <label for="aTime" class="ui-hidden-accessible">到着時間:</label>
-                <input type="text" name="arrivalTime" id="aTime" value="" placeholder="到着時間" data-theme="a" data-bind="value: LocationOnDialog.arrivalTime">
-                <label for="location" class="ui-hidden-accessible">経由地:</label>
-                <input type="text" name="locationName" id="location" value="" placeholder="経由地" data-theme="a" data-bind="value: LocationOnDialog.locationName">
-                <label for="sTime" class="ui-hidden-accessible">出発時間:</label>
-                <input type="text" name="departureTime" id="sTime" value="" placeholder="出発時間" data-theme="a" data-bind="value: LocationOnDialog.departureTime">
-                <button type="submit" data-bind="click: updateRow" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-btn-icon-left ui-icon-check">登録</button>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th><label for="location">経由地:</label></th><td colspan="2"><input type="text" name="locationName" id="location" value="" placeholder="経由地" data-theme="a" data-bind="value: LocationOnDialog.locationName"></td>
+                        </tr>
+                        <tr>
+                            <th><label for="aTime">到着時間:</label></th>
+                            <td><input type="time" name="arrivalTime" id="aTime" value="" placeholder="到着時間" data-theme="a" data-bind="value: LocationOnDialog.arrivalTime"></td>
+                            <td><button type="submit" data-bind="click: recordArrivalTimeNow" class="ui-btn ui-corner-all ui-shadow ui-btn-icon-left">記録</button></td>
+                        </tr>
+                        <tr>
+                            <th><label for="sTime">出発時間:</label></th>
+                            <td><input type="time" name="departureTime" id="sTime" value="" placeholder="出発時間" data-theme="a" data-bind="value: LocationOnDialog.departureTime"></td>
+                            <td><button type="submit" data-bind="click: recordDepartureTimeNow" class="ui-btn ui-corner-all ui-shadow ui-btn-icon-left">記録</button></td>
+                        </tr>
+                        <tr>
+                            <th>メモ</th>
+                            <td colspan="2"><textarea name="memo" rows="5" cols="50" wrap="soft"></textarea></td>
+                        </tr>
+                        <tr>
+                            <th><label for="">移動時間:</label></th><td colspan="2"><span data-bind="text: LocationOnDialog.movingTime"></span></td>
+                        </tr>
+                        <tr>
+                            <th><label for="">休憩時間:</label></th><td colspan="2"><span data-bind="text: RestTimeOnDialog"></span></td>
+                        </tr>
+                        <tr>
+                            <th><label for="">日付:</label></th><td colspan="2"><span data-bind="text: DateOnDialog"></span></td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">
+                                <button type="submit" data-bind="click: updateRow" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-btn-icon-left ui-icon-check">変更</button>
+                                <button type="button" data-bind="click: closeWindow" class="ui-btn ui-corner-all ui-shadow">キャンセル</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
+        <!-- 経由地名称更新ダイアログ -->
         <div data-role="popup" id="recordLocationNameDialog" title="経由地登録">
             <label for="location2" class="ui-hidden-accessible">経由地:</label>
             <input type="text" name="locationName" id="location2" value="" placeholder="経由地" data-theme="a" data-bind="value: LocationOnDialog.locationName">
             <button type="submit" data-bind="click: updateLocationName" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-btn-icon-left ui-icon-check">登録</button>
         </div>
+        <!-- メニュー -->
         <div data-role="popup" data-position-to="window" id="menuDialog" title="メニュー">
             <div style="padding:10px 20px;">
                 <button class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-btn-icon-left ui-icon-edit">保存</button>

@@ -19,6 +19,18 @@ var Location = (function() {
             var min_diff = p.__getDifferenceMinutes(arrival, moving);
             this.movingTime = ko.observable(min_diff);
         }
+        this.restTime = function() {
+            if (typeof this.departureTime() != 'object' || typeof this.departureTime() != 'object') {
+                return "";
+            }
+            return p.__getDifferenceMinutes(this.departureTime(), this.arrivalTime());
+        };
+        this.date = function() {
+            if (typeof this.arrivalTime() != 'object') {
+                return "";
+            }
+            return this.arrivalTime().format('YYYY/MM/DD');
+        };
     };
 
     var p = Location.prototype;
@@ -43,16 +55,6 @@ var Location = (function() {
     }
 
     return Location;
-})();
-
-/**
- */
-var DriveEntity = (function() {
-    var DriveEntity = function(name, create_data) {
-        this.name        = ko.observable(name);
-        this.create_data = ko.observable(create_data);
-    };
-    return DriveEntity;
 })();
 
 /**
@@ -103,6 +105,8 @@ var ViewModel = {
 
     // Tempolary Input Data.
     LocationOnDialog: new Location("", "", "", ""),
+    RestTimeOnDialog: ko.observable(""),
+    DateOnDialog    : ko.observable(""),
 
     // Editing row number
     current_id: 0,
@@ -120,35 +124,59 @@ var ViewModel = {
     test: function() {
         console.log("sample");
     },
+    // 出発時刻入力
+    recordDepartureTime: function(departureTime) {
+        var current_location = ViewModel.LocationList()[ViewModel.current_id];
+
+        current_location.departureTime(departureTime);
+
+        // 変更対象の経由地が最後のデータでない場合、次の経由地の移動時間を更新
+        if (ViewModel.LocationList().length - 1 > ViewModel.current_id) {
+            var idx = ViewModel.current_id + 1;
+            var next_location = ViewModel.LocationList()[idx];
+            next_location.updateMovingTime(current_location);
+        }
+    },
+    // 到着時刻入力
+    recordArrivalTime: function(arrival) {
+        var current_location = ViewModel.LocationList()[ViewModel.current_id];
+
+        current_location.arrivalTime(arrival);
+
+        // 変更対象の一つ前の経由地の移動時間を更新
+        if (ViewModel.current_id != 0) {
+            var previous_location = ViewModel.LocationList()[ViewModel.current_id - 1];
+            current_location.updateMovingTime(previous_location);
+        }
+    },
+    // 現在時刻を経由地編集ダイアログの出発時刻に入力
+    recordDepartureTimeNow: function() {
+        var now = moment();
+        ViewModel.LocationOnDialog.departureTime(now.format("HH:mm"));
+    },
+    // 現在時刻を経由地編集ダイアログの到着時刻に入力
+    recordArrivalTimeNow: function() {
+        var now = moment();
+        ViewModel.LocationOnDialog.arrivalTime(now.format("HH:mm"));
+    },
     // 経由地情報変更（経由地編集ダイアログで登録ボタンクリック）
     updateRow: function(place) {
         // 変更対象の経由地データを取得
         var current_location = ViewModel.LocationList()[ViewModel.current_id];
-        // 変更対象の一つ前の経由地データを取得
-        var previous_location = "";
-        if (ViewModel.current_id != 0) {
-            var previous_location = ViewModel.LocationList()[ViewModel.current_id - 1];
-        }
 
         // 入力された到着時刻とそれから計算される移動時間を変更対象の経由地に反映
         var input_arrival = ViewModel.LocationOnDialog.arrivalTime();
         if (input_arrival != "") {
-            current_location.arrivalTime(moment(input_arrival, "HH:mm"));
-            current_location.updateMovingTime(previous_location);
+            ViewModel.recordArrivalTime(moment(input_arrival, "HH:mm"));
         }
+
         // 入力された経由地名称を変更対象の経由地に反映
         current_location.locationName(ViewModel.LocationOnDialog.locationName());
+
         // 入力された出発時刻を変更対象の経由地に反映
         var input_departure = ViewModel.LocationOnDialog.departureTime();
         if (input_departure != "") {
-            current_location.departureTime(moment(input_departure, "HH:mm"));
-
-            // 変更対象の経由地が最後のデータでない場合、次の経由地の移動時間を更新
-            if (ViewModel.LocationList().length - 1 > ViewModel.current_id) {
-                var idx = ViewModel.current_id + 1;
-                var next_location = ViewModel.LocationList()[idx];
-                next_location.updateMovingTime(current_location);
-            }
+            ViewModel.recordDepartureTime(moment(input_departure, "HH:mm"));
         }
 
         $.mobile.changePage('#main_screen');
@@ -173,8 +201,7 @@ var ViewModel = {
                 break;
             case EntriedColumnStatus.LocationName:
                 //出発時刻入力
-                var current_location = ViewModel.LocationList()[ViewModel.current_id];
-                current_location.departureTime(moment());
+                ViewModel.recordDepartureTime(moment());
                 break;
             case EntriedColumnStatus.DepartureTime:
                 //到着時刻入力
@@ -205,7 +232,13 @@ var ViewModel = {
             departureTime = current_location.departureTime().format("HH:mm");
         }
         ViewModel.LocationOnDialog.departureTime(departureTime);
+        ViewModel.LocationOnDialog.movingTime(current_location.movingTime());
+        ViewModel.RestTimeOnDialog(current_location.restTime());
+        ViewModel.DateOnDialog(current_location.date());
         $('#updateLocationDialog').popup('open');
+    },
+    closeWindow: function() {
+        $.mobile.changePage('#main_screen');
     },
     exportCsv: function() {
         var header = "到着時間,場所,出発時間\n";
